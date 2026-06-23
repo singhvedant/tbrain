@@ -112,6 +112,10 @@ function defaultPackLocator(name: string): string | null {
     // Ships as install default (Lane E T17) + via gbrain onboard pack
     // upgrade flow (the unify-types Minion handler).
     'gbrain-base-v2',
+    // tbrain overlay: multi-asset trader lens (instrument/position/trade/
+    // thesis/setup/sector/catalyst + trade_outcome/setup_edge/market_call/
+    // risk_call calibration). Extends gbrain-base; engine untouched.
+    'tbrain-trader',
   ];
   if (BUNDLED.includes(name)) {
     // Resolve bundled YAML relative to this source file. Works in both

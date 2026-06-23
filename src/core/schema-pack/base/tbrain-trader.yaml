@@ -1,0 +1,603 @@
+# tbrain-trader — multi-asset trader lens pack
+#
+# The pack that turns gbrain's domain-agnostic engine into a TRADER's brain
+# (tbrain). Overlay-only: src/core stays byte-for-byte gbrain. All trader
+# semantics live HERE + in the trader skills + filing rules.
+#
+# Target operator: a discretionary MULTI-ASSET generalist — equities, F&O
+# (options/futures), crypto, ETFs/indices, and macro. The brain is the
+# operator's memory + synthesis layer; the BODY (Hermes / Claude Code /
+# Codex) reads it over MCP/CLI. tbrain does NOT execute, route orders, or
+# hold live market data — it holds CONTEXT: theses, positions, journal,
+# setups, post-mortems, and the relationships between instruments.
+#
+# ── SELF-CONTAINED BY DESIGN ────────────────────────────────────────────
+# This pack `extends: gbrain-base` for calibration + takes-kind lineage,
+# BUT it also re-declares the base-generic page_types and link_types it
+# needs. Reason: as of the engine version vendored here, resolvePack walks
+# the extends chain only for depth/stat purposes and does NOT flatten
+# parent page_types into the child manifest ("full extends-merging is the
+# v0.41+ T20 follow-up" — registry.ts). Pack-aware inference
+# (inferTypeFromPack) reads ONLY the active pack's own page_types. So to
+# keep person/company/meeting/note/source recognition working alongside
+# the trader types, they are carried here directly. VC-specific base types
+# (deal, yc, civic) and verbs (founded, invested_in, yc_partner,
+# led_round) are intentionally dropped — a trader brain doesn't need them.
+# When the engine ships true extends-merge, this duplication can collapse
+# back to a thin child pack.
+#
+# Does NOT declare new cycle phases — trader work consumes the existing
+# extract_facts + propose_takes + grade_takes + calibration_profile loop.
+# propose_takes populates take_domain_assignments from the page_types →
+# calibration_domain mapping below at write time.
+
+api_version: gbrain-schema-pack-v1
+name: tbrain-trader
+version: 1.0.0
+description: "Multi-asset trader lens (self-contained). Trader types (instrument/position/trade/thesis/setup/sector/catalyst/watchlist/postmortem/account/macro) + retained base-generic types (person/company/meeting/note/source/concept/...). Trader edges + trade_outcome/setup_edge/market_call/risk_call calibration. Engine-agnostic overlay on gbrain-base."
+gbrain_min_version: 0.41.0
+extends: gbrain-base
+
+borrow_from:
+  - pack: gbrain-base
+    types:
+      - person
+      - company
+
+# base {fact, take, bet, hunch} + trader kinds:
+#   - trade_idea: a proposed entry not yet taken (lives until executed/killed)
+#   - risk_flag:  a flagged exposure / drawdown / concentration warning
+takes_kinds:
+  - fact
+  - take
+  - bet
+  - hunch
+  - trade_idea
+  - risk_flag
+
+# ---------------------------------------------------------------------------
+# Page types. primitive ∈ {entity, concept, temporal, media, annotation}.
+# TRADER types first (primary domain), then retained base generics.
+# ---------------------------------------------------------------------------
+page_types:
+  # ── Trader entities ──────────────────────────────────────────────────
+  - name: instrument
+    primitive: entity
+    path_prefixes:
+      - instruments/
+      - tickers/
+      - instrument/
+    aliases: []
+    extractable: true        # durable fundamental/structural picture → facts
+    expert_routing: true     # "what do I know about NVDA / BTC / Bank Nifty?"
+
+  - name: sector
+    primitive: entity
+    path_prefixes:
+      - sectors/
+      - themes/
+      - sector/
+    aliases: []
+    extractable: true
+    expert_routing: true
+
+  - name: account
+    primitive: entity
+    path_prefixes:
+      - accounts/
+      - portfolios/
+    aliases: []
+    extractable: false
+    expert_routing: false
+
+  # ── Trader concepts ──────────────────────────────────────────────────
+  - name: thesis
+    primitive: concept
+    path_prefixes:
+      - theses/
+      - thesis/
+    aliases: []
+    extractable: true        # thesis_text + key_bets[] mine into facts
+    expert_routing: false
+
+  - name: setup
+    primitive: concept
+    path_prefixes:
+      - setups/
+      - playbooks/
+      - playbook/
+    aliases: []
+    extractable: true        # "when X, do Y, invalidation Z"
+    expert_routing: false
+
+  - name: macro
+    primitive: concept
+    path_prefixes:
+      - macro/
+      - regime/
+    aliases: []
+    extractable: true
+    expert_routing: false
+
+  - name: watchlist
+    primitive: concept
+    path_prefixes:
+      - watchlists/
+      - watchlist/
+    aliases: []
+    extractable: false
+    expert_routing: false
+
+  # ── Trader temporals ─────────────────────────────────────────────────
+  - name: trade
+    primitive: temporal
+    path_prefixes:
+      - journal/
+      - trades/
+      - trade/
+    aliases: []
+    extractable: true        # rationale → takes for later grading
+    expert_routing: false
+
+  - name: position
+    primitive: temporal
+    path_prefixes:
+      - positions/
+      - book/
+    aliases: []
+    extractable: false
+    expert_routing: false
+
+  - name: catalyst
+    primitive: temporal
+    path_prefixes:
+      - catalysts/
+      - events/
+      - catalyst/
+    aliases: []
+    extractable: true
+    expert_routing: false
+
+  - name: postmortem
+    primitive: temporal
+    path_prefixes:
+      - postmortems/
+      - reviews/
+      - postmortem/
+    aliases: []
+    extractable: true
+    expert_routing: false
+
+  # ── Retained base generics (NOT VC-specific) ─────────────────────────
+  # Stronger-signal wiki/writing types first (mirror base priority order).
+  - name: writing
+    primitive: media
+    path_prefixes:
+      - writing/
+    aliases: []
+    extractable: true
+    expert_routing: false
+
+  - name: analysis
+    primitive: media
+    path_prefixes:
+      - wiki/analysis/
+    aliases: []
+    extractable: false
+    expert_routing: false
+
+  - name: concept
+    primitive: concept
+    path_prefixes:
+      - wiki/concepts/
+      - wiki/concept/
+    aliases: []
+    extractable: true
+    expert_routing: false
+
+  - name: person
+    primitive: entity
+    path_prefixes:
+      - people/
+      - person/
+    aliases: []
+    extractable: false
+    expert_routing: true     # analysts, management, operators worth tracking
+
+  - name: company
+    primitive: entity
+    path_prefixes:
+      - companies/
+      - company/
+    aliases: []
+    extractable: false
+    expert_routing: true     # issuers / peers behind the tickers
+
+  - name: project
+    primitive: concept
+    path_prefixes:
+      - projects/
+      - project/
+    aliases: []
+    extractable: false
+    expert_routing: false
+
+  - name: source
+    primitive: media
+    path_prefixes:
+      - sources/
+      - source/
+    aliases: []
+    extractable: true        # filings, broker notes, transcripts
+    expert_routing: false
+
+  - name: media
+    primitive: media
+    path_prefixes:
+      - media/
+    aliases: []
+    extractable: false
+    expert_routing: false
+
+  - name: email
+    primitive: temporal
+    path_prefixes:
+      - emails/
+      - email/
+    aliases: []
+    extractable: true
+    expert_routing: false
+
+  - name: note
+    primitive: concept
+    path_prefixes:
+      - notes/
+      - note/
+    aliases: []
+    extractable: true
+    expert_routing: false
+
+  - name: meeting
+    primitive: temporal
+    path_prefixes:
+      - meetings/
+      - meeting/
+    aliases: []
+    extractable: true        # earnings calls, analyst days, desk calls
+    expert_routing: false
+
+  - name: conversation
+    primitive: temporal
+    path_prefixes:
+      - conversations/
+    aliases: []
+    extractable: true
+    expert_routing: false
+
+  - name: atom
+    primitive: annotation
+    path_prefixes:
+      - atoms/
+    aliases: []
+    extractable: false
+    expert_routing: false
+
+  - name: code
+    primitive: media
+    path_prefixes: []
+    aliases: []
+    extractable: false
+    expert_routing: false
+
+  - name: image
+    primitive: media
+    path_prefixes: []
+    aliases: []
+    extractable: false
+    expert_routing: false
+
+  - name: synthesis
+    primitive: annotation
+    path_prefixes: []
+    aliases: []
+    extractable: false
+    expert_routing: false
+
+  - name: extract_receipt
+    primitive: annotation
+    path_prefixes:
+      - extracts/
+    aliases: []
+    extractable: false
+    expert_routing: false
+
+# ---------------------------------------------------------------------------
+# Link verbs. TRADER edges first, then retained base-generic verbs.
+# Each carries a regex (zero-LLM inference) or a page_type binding. Regexes
+# run under the engine ReDoS budget (50ms/regex, 500ms/page).
+# ---------------------------------------------------------------------------
+link_types:
+  # ── Trader edges ─────────────────────────────────────────────────────
+  - name: position_in
+    inference:
+      regex: \b(long|short|bought|sold|holding|hold|added to|trimmed|scaled into|position in|opened|closed)\b
+
+  - name: hedges
+    inference:
+      regex: \b(hedge|hedges|hedged|hedging against|offsets?|protects? against)\b
+
+  - name: correlated_with
+    inference:
+      regex: \b(correlated with|correlates with|tracks|moves with|co-?moves|inverse of|inversely (?:correlated|tracks)|decoupled from)\b
+
+  - name: exposes_to
+    inference:
+      regex: \b(exposed to|exposure to|exposes? to|levered to|sensitive to)\b
+
+  - name: supplies
+    inference:
+      regex: \b(supplies|supplier (?:to|of)|provides? (?:parts|components|inputs) to|vendor to)\b
+
+  - name: competes_with
+    inference:
+      regex: \b(competes with|competitor (?:of|to)|rival (?:of|to)|takes share from)\b
+
+  - name: catalyst_for
+    inference:
+      regex: \b(catalyst for|triggers|driven by|catalyzed by|on the back of|ahead of (?:earnings|results|the print))\b
+
+  - name: thesis_for
+    inference:
+      regex: \b(bullish on|bearish on|long thesis on|short thesis on|thesis on|fade|conviction on)\b
+
+  - name: in_sector
+    inference:
+      regex: \b(in the .{1,40}? sector|constituent of|part of the .{1,40}? (?:index|basket|theme))\b
+
+  # ── Retained base-generic verbs ──────────────────────────────────────
+  - name: attended
+    inference:
+      page_type: meeting
+
+  - name: image_of
+    inference:
+      page_type: image
+
+  - name: works_at
+    inference:
+      regex: \b(works? at|employed by|works? for|joined|hired by|ceo of|cfo of|cto of|cmo of)\b
+
+  - name: advises
+    inference:
+      regex: \b(advises|advisor|advising|advisor to)\b
+
+  - name: discussed_in
+
+  - name: source
+
+  - name: related_to
+
+  - name: mentions
+
+# ---------------------------------------------------------------------------
+# Frontmatter field → link verb. Source page's type selects the verb.
+# Primary (deterministic) edge source for structured trade logs.
+# ---------------------------------------------------------------------------
+frontmatter_links:
+  - page_type: position
+    fields: [instrument, instruments, ticker, tickers]
+    link_type: position_in
+  - page_type: position
+    fields: [account]
+    link_type: held_in
+  - page_type: position
+    fields: [hedge, hedges]
+    link_type: hedges
+
+  - page_type: trade
+    fields: [instrument, instruments, ticker, tickers]
+    link_type: position_in
+  - page_type: trade
+    fields: [thesis]
+    link_type: thesis_for
+  - page_type: trade
+    fields: [setup]
+    link_type: uses_setup
+  - page_type: trade
+    fields: [account]
+    link_type: held_in
+
+  - page_type: thesis
+    fields: [instrument, instruments, ticker, tickers]
+    link_type: thesis_for
+  - page_type: thesis
+    fields: [sector, sectors]
+    link_type: thesis_for
+
+  - page_type: instrument
+    fields: [sector, sectors]
+    link_type: in_sector
+  - page_type: instrument
+    fields: [peers, competitors]
+    link_type: competes_with
+  - page_type: instrument
+    fields: [suppliers]
+    link_type: supplies
+  - page_type: instrument
+    fields: [hedge, hedges]
+    link_type: hedges
+  - page_type: instrument
+    fields: [correlated_with]
+    link_type: correlated_with
+
+  - page_type: catalyst
+    fields: [instrument, instruments, ticker, tickers]
+    link_type: catalyst_for
+  - page_type: catalyst
+    fields: [sector, sectors]
+    link_type: catalyst_for
+
+  - page_type: watchlist
+    fields: [instrument, instruments, tickers]
+    link_type: watches
+
+  - page_type: postmortem
+    fields: [trade, trades]
+    link_type: reviews
+  - page_type: postmortem
+    fields: [thesis]
+    link_type: reviews
+
+  # Retained base-generic frontmatter links.
+  - page_type: person
+    fields: [company, companies]
+    link_type: works_at
+  - page_type: company
+    fields: [key_people]
+    link_type: works_at
+  - page_type: meeting
+    fields: [attendees]
+    link_type: attended
+
+# ---------------------------------------------------------------------------
+# Calibration domains — the operator's measured EDGE.
+# ---------------------------------------------------------------------------
+calibration_domains:
+  - name: trade_outcome
+    # Brier over resolved trade/position takes: did the call win?
+    aggregator: scalar_brier
+    page_types:
+      - trade
+      - position
+
+  - name: setup_edge
+    # Weighted Brier over setup takes — does a named playbook have edge?
+    aggregator: weighted_brier
+    page_types:
+      - setup
+
+  - name: market_call
+    # Weighted Brier over thesis + macro takes (rare-but-high-stakes).
+    aggregator: weighted_brier
+    page_types:
+      - thesis
+      - macro
+
+  - name: risk_call
+    # Brier over risk_flag/hedge takes — was the flagged risk real?
+    aggregator: scalar_brier
+    page_types:
+      - position
+
+# ---------------------------------------------------------------------------
+# Enrichable types — dream-cycle auto-enrichment targets.
+# ---------------------------------------------------------------------------
+enrichable_types:
+  - type: instrument
+    rubric: instrument-default
+  - type: sector
+    rubric: sector-default
+  - type: person
+    rubric: person-default
+  - type: company
+    rubric: company-default
+
+# No new cycle phases — trader work consumes the existing pipeline.
+phases: []
+
+# ---------------------------------------------------------------------------
+# Filing rules — canonical tbrain layout (audited by doctor / check-resolvable).
+# ---------------------------------------------------------------------------
+filing_rules:
+  - kind: instrument
+    directory: instruments/
+    examples:
+      - instruments/nvda
+      - instruments/btc-usd
+      - instruments/bank-nifty
+    description: "One page per tradeable: equity, option underlier, future, crypto, ETF, or index. Frontmatter: asset_class, sector, peers[], suppliers[], correlated_with[]. Durable fundamental/structural picture — NOT live price."
+  - kind: sector
+    directory: sectors/
+    examples:
+      - sectors/semiconductors
+      - sectors/indian-psu-banks
+    description: "Sector / theme / basket. Instruments link in via in_sector. Carries the sector-level driver thesis."
+  - kind: account
+    directory: accounts/
+    examples:
+      - accounts/main-cash
+      - accounts/fno-margin
+    description: "Broker / portfolio bucket. Positions file held_in here. Keeps risk scoped per account."
+  - kind: thesis
+    directory: theses/
+    examples:
+      - theses/ai-capex-cycle-2026
+      - theses/short-inr-bonds
+    description: "Directional or structural view. Frontmatter: thesis_text, key_bets[], market_view, invalidation, vintage. Sub-bets resolve into postmortems via take_id. Feeds market_call calibration."
+  - kind: setup
+    directory: setups/
+    examples:
+      - setups/opening-range-breakout
+      - setups/iv-crush-post-earnings
+    description: "Repeatable playbook: trigger, entry, sizing, invalidation, target. Trades reference via uses_setup. Feeds setup_edge calibration."
+  - kind: macro
+    directory: macro/
+    examples:
+      - macro/regime-2026-h1
+      - macro/fed-path
+    description: "Macro / regime view (rates, liquidity, USD, risk-on/off). Feeds market_call calibration alongside theses."
+  - kind: watchlist
+    directory: watchlists/
+    examples:
+      - watchlists/breakout-candidates
+      - watchlists/earnings-week
+    description: "Tracked candidate set. Links to instruments via watches. Lightweight — promote names to theses/trades when acted on."
+  - kind: trade
+    directory: journal/
+    examples:
+      - journal/2026-06/nvda-long-orb
+      - journal/2026-06/btc-short-hedge
+    description: "One execution/decision per page. Frontmatter: instrument, side, size, entry, stop, target, thesis, setup, account, opened_at. Rationale extracted into takes for later grading. Month-bucketed."
+  - kind: position
+    directory: positions/
+    examples:
+      - positions/nvda
+      - positions/bank-nifty-25000-ce
+    description: "Current open/closed holding state per instrument-leg. Aggregates trades. Frontmatter: instrument, net_qty, avg_price, account, status, hedges. Feeds trade_outcome + risk_call."
+  - kind: catalyst
+    directory: catalysts/
+    examples:
+      - catalysts/2026-07/nvda-q2-earnings
+      - catalysts/2026-07/fomc
+    description: "Dated event that can move instruments/sectors: earnings, expiry, macro print, Fed, unlocks. Links via catalyst_for. Month-bucketed by event date."
+  - kind: postmortem
+    directory: postmortems/
+    examples:
+      - postmortems/2026-06/nvda-long-orb
+    description: "Closed-trade or resolved-thesis review. Frontmatter: trade/thesis (FK), resolved_outcome (bool), pnl, resolved_at, learned_pattern (one-sentence). Populates trade_outcome / market_call calibration. Month-bucketed by close date."
+  # Retained base-generic filing rules.
+  - kind: person
+    directory: people/
+    examples:
+      - people/analyst-jane-doe
+    description: "Analysts, company management, desk contacts, notable operators."
+  - kind: company
+    directory: companies/
+    examples:
+      - companies/nvidia
+    description: "Issuer / peer behind a ticker. Distinct from the tradeable instrument page."
+  - kind: meeting
+    directory: meetings/
+    examples:
+      - meetings/2026-07-nvda-q2-call
+    description: "Earnings calls, analyst days, desk calls. Propagate entities to instruments/ and companies/."
+  - kind: source
+    directory: sources/
+    examples:
+      - sources/nvda-10q-2026q2
+    description: "Filings, broker notes, transcripts, research PDFs. extractable."
+  - kind: note
+    directory: notes/
+    examples:
+      - notes/idea-curve-steepener
+    description: "Loose research notes and ideas not yet promoted to a thesis."
