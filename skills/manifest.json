@@ -2,7 +2,7 @@
   "name": "gbrain",
   "version": "0.32.3.0",
   "conformance_version": "1.0.0",
-  "description": "Personal knowledge brain with hybrid RAG search \u2014 GStack mod for agent platforms",
+  "description": "Personal knowledge brain with hybrid RAG search — GStack mod for agent platforms",
   "skills": [
     {
       "name": "ingest",
@@ -263,6 +263,36 @@
       "name": "skill-optimizer",
       "path": "skill-optimizer/SKILL.md",
       "description": "Self-evolving skill optimization via gbrain skillopt — SkillOpt-paper-grounded text-space optimizer with validation gating (median-of-3 + epsilon=0.05), bundled-skill safety, bootstrap review sentinel, per-skill DB lock, and atomic versioned writes."
+    },
+    {
+      "name": "trade-journal",
+      "path": "trade-journal/SKILL.md",
+      "description": "Log a trade/decision as a gradeable journal page (instrument/side/size/entry/stop/thesis). Feeds trade_outcome calibration."
+    },
+    {
+      "name": "thesis-tracker",
+      "path": "thesis-tracker/SKILL.md",
+      "description": "Create/maintain living theses (and macro views) with explicit resolvable key_bets. Feeds market_call calibration."
+    },
+    {
+      "name": "trade-postmortem",
+      "path": "trade-postmortem/SKILL.md",
+      "description": "Review a closed trade or resolved thesis bet; record outcome/PnL/learned_pattern. Closes the calibration loop."
+    },
+    {
+      "name": "premarket-brief",
+      "path": "premarket-brief/SKILL.md",
+      "description": "Synthesize a pre-session briefing from open book, catalysts, theses, watchlist, and risk flags. Reads brain, not live quotes."
+    },
+    {
+      "name": "position-book",
+      "path": "position-book/SKILL.md",
+      "description": "Maintain the position book and answer exposure/concentration/correlation across the book. Feeds risk_call calibration."
+    },
+    {
+      "name": "watchlist",
+      "path": "watchlist/SKILL.md",
+      "description": "Manage tracked candidate sets with triggers; promote names into theses/trades when acted on."
     }
   ],
   "dependencies": {

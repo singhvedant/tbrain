@@ -23,6 +23,34 @@ not the source, not the skill that's running.
 | Reusable framework/thesis -> `sources/` | -> `concepts/` | It's a mental model |
 | Tweet thread about policy -> `media/` | -> `civic/` or `concepts/` | media/ is for content ops |
 
+## Trader filing (tbrain-trader pack)
+
+When the `tbrain-trader` schema pack is active, these subject directories
+apply. Same iron law: file by PRIMARY SUBJECT, cross-link via the graph.
+
+| Subject | Directory | Notes |
+|---------|-----------|-------|
+| A tradeable (equity/option/future/crypto/ETF/index) | `instruments/` | Durable structural picture, NOT live price. Distinct from `companies/` (the issuer). |
+| A sector/theme/basket | `sectors/` | Instruments link in via `in_sector`. |
+| A broker/portfolio bucket | `accounts/` | Positions file `held_in` here. |
+| A directional/structural view | `theses/` | Carries resolvable `key_bets[]`. Feeds `market_call`. |
+| A regime/macro view | `macro/` | Rates, liquidity, USD, risk-on/off. Feeds `market_call`. |
+| A repeatable playbook | `setups/` | Trigger/entry/sizing/invalidation/target. Feeds `setup_edge`. |
+| A tracked candidate set | `watchlists/` | Names promote to theses/trades when acted on. |
+| One trade/decision | `journal/YYYY-MM/` | Entry rationale → graded take. Feeds `trade_outcome`. |
+| Rolled-up holding state | `positions/` | net_qty/avg_price/account/hedges. Aggregates trades. |
+| A dated market-moving event | `catalysts/YYYY-MM/` | Earnings/expiry/macro/Fed. Links via `catalyst_for`. |
+| Closed-trade / resolved-bet review | `postmortems/YYYY-MM/` | Outcome + `learned_pattern`. Closes calibration loop. |
+
+Trader-specific misfiling to avoid:
+
+| Wrong | Right | Why |
+|-------|-------|-----|
+| Live price/quote → a brain page | (don't store) | tbrain holds context, not market data. |
+| Ticker fundamentals → `companies/` | → `instruments/` | The tradeable is the subject; the company is the issuer. |
+| Trade rationale buried in `positions/` | → `journal/` trade page | The decision rationale is what gets graded. |
+| Skipping the post-mortem | → always write `postmortems/` | No post-mortem = edge never measured. |
+
 ## Sanctioned exception: synthesis output is sui generis
 
 The "file by primary subject" rule is for raw ingest. Synthesized output that
