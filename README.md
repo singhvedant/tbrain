@@ -1,4 +1,14 @@
-# GBrain
+# tbrain — the trader's brain
+
+> **This is a trader-focused fork of GBrain.** The gbrain engine is kept
+> intact; a trader lens (the `tbrain-trader` schema pack + trader skills +
+> filing rules) is overlaid on top. **Start here: [`TBRAIN.md`](TBRAIN.md).**
+> The rest of this README is the upstream gbrain documentation, still
+> accurate for the engine, install, and deployment.
+
+---
+
+# GBrain (engine)
 
 **Search gives you raw pages. GBrain gives you the answer.** It's the brain layer your AI agent has been missing — the only one that does synthesis, graph traversal, and gap analysis in one box. Run a full autonomous agent on top of it, or just wire it into Claude Code or Codex as a supercharged retrieval layer in one command; either way your coding agent stops being amnesiac about everything that isn't code.
 

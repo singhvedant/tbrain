@@ -1,5 +1,31 @@
 # TODOS
 
+## tbrain fork — trader-lens conversion
+
+tbrain = gbrain engine + trader overlay. Done so far (overlay approach,
+multi-asset generalist):
+- `src/core/schema-pack/base/tbrain-trader.yaml` — self-contained trader pack
+  (registered in `load-active.ts` BUNDLED). Validated: 16/16 path inference.
+- Trader skills: trade-journal, thesis-tracker, trade-postmortem,
+  premarket-brief, position-book, watchlist (in `skills/manifest.json`).
+- Trader filing rules in `skills/_brain-filing-rules.{json,md}`.
+- Branding: `package.json` name=tbrain (+`tbrain` bin alias), `TBRAIN.md`,
+  README banner.
+
+Open follow-ups:
+- [ ] Collapse the self-contained re-declaration of base-generic types in
+  `tbrain-trader.yaml` once the engine ships true `extends`-merge for
+  pack-aware `inferTypeFromPack` (tracked upstream as "v0.41+ T20").
+- [ ] Add enrichment rubrics `instrument-default` / `sector-default`
+  (referenced by the pack's `enrichable_types`); today they fall back to
+  generic enrichment.
+- [ ] Optional dream-cycle crons: nightly thesis-contradiction sweep,
+  stop-proximity + concentration `risk_flag` scan, pre-open `premarket-brief`.
+- [ ] Decide whether to strip VC-specific bundled packs/skills
+  (gbrain-investor, yc-* skills) — kept for now (overlay, non-conflicting).
+
+---
+
 ## reliability fix-wave follow-ups (filed v0.42.52.0)
 
 Deferred from the autopilot/supervisor + sync/status/minion reliability wave

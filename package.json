@@ -1,9 +1,10 @@
 {
-  "name": "gbrain",
-  "description": "Postgres-native personal knowledge brain with hybrid RAG search",
+  "name": "tbrain",
+  "description": "Trader's brain — multi-asset trading memory + synthesis layer. gbrain engine + tbrain-trader lens pack. Body-agnostic (Hermes / Claude Code / Codex).",
   "type": "module",
   "main": "src/core/index.ts",
   "bin": {
+    "tbrain": "src/cli.ts",
     "gbrain": "src/cli.ts"
   },
   "exports": {
