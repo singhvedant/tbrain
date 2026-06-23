@@ -45,6 +45,7 @@ import {
   __setPackLocatorForTests,
   _resetPackLocatorForTests,
 } from '../core/schema-pack/index.ts';
+import { defaultPackLocator } from '../core/schema-pack/load-active.ts';
 import type { SchemaPackManifest, PackPrimitive } from '../core/schema-pack/manifest-v1.ts';
 import { PACK_PRIMITIVES } from '../core/schema-pack/manifest-v1.ts';
 import { gbrainPath, loadConfig, configPath } from '../core/config.ts';
@@ -383,7 +384,11 @@ function packPathByName(name: string): string | null {
     const candidate = join(baseDir, c);
     if (existsSync(candidate)) return candidate;
   }
-  return null;
+  // Fall back to the bundled-pack registry shared with loadActivePack() —
+  // covers every other bundled lens pack (gbrain-investor, gbrain-creator,
+  // gbrain-engineer, gbrain-everything, gbrain-base-v2, tbrain-trader, ...)
+  // that previously had no path here and errored "Unknown pack".
+  return defaultPackLocator(name);
 }
 
 // Test seam — let unit tests inject the locator if needed.

@@ -1,4 +1,10 @@
-# GBrain Installation Guide for AI Agents
+# tbrain Installation Guide for AI Agents
+
+This is **tbrain** — a trader-focused fork of gbrain. The engine/CLI is still
+called `gbrain` (binary aliased as `tbrain` too); the trader identity comes
+from the `tbrain-trader` schema pack activated in Step 3. Read `TBRAIN.md` at
+the repo root for the trader-specific overview before or after this file —
+this file covers full engine install end to end.
 
 Read this entire file, then follow the steps. Ask the user for API keys when needed.
 Target: ~30 minutes to a fully working brain.
@@ -10,9 +16,9 @@ protocol (install, read order, trust boundary, common tasks). Claude Code reads
 `CLAUDE.md` automatically and can skip ahead.
 
 If you fetched this file by URL without cloning yet, the companion files live at:
-- `https://raw.githubusercontent.com/garrytan/gbrain/master/AGENTS.md` — start here
-- `https://raw.githubusercontent.com/garrytan/gbrain/master/llms.txt` — full doc map
-- `https://raw.githubusercontent.com/garrytan/gbrain/master/llms-full.txt` — same map, inlined
+- `https://raw.githubusercontent.com/singhvedant1701/tbrain/main/AGENTS.md` — start here
+- `https://raw.githubusercontent.com/singhvedant1701/tbrain/main/llms.txt` — full doc map
+- `https://raw.githubusercontent.com/singhvedant1701/tbrain/main/llms-full.txt` — same map, inlined
 
 ## Step 1: Install GBrain
 
@@ -21,7 +27,7 @@ Default path (Bun is required — gbrain is a Bun + TypeScript runtime):
 ```bash
 curl -fsSL https://bun.sh/install | bash
 export PATH="$HOME/.bun/bin:$PATH"
-bun install -g github:garrytan/gbrain
+bun install -g github:singhvedant1701/tbrain
 ```
 
 Verify: `gbrain --version` should print a version number. If `gbrain` is not found,
@@ -30,11 +36,11 @@ restart the shell or add the PATH export to the shell profile.
 > **If `bun install -g` aborts or `gbrain doctor` reports `schema_version: 0`** (Bun
 > occasionally blocks the top-level postinstall hook on global installs, so schema
 > migrations don't run automatically), the CLI prints a recovery hint pointing at
-> [#218](https://github.com/garrytan/gbrain/issues/218). Run `gbrain apply-migrations --yes`
+> [#218](https://github.com/singhvedant1701/tbrain/issues/218). Run `gbrain apply-migrations --yes`
 > to recover. If that doesn't work, fall back to the deterministic install path:
 >
 > ```bash
-> git clone https://github.com/garrytan/gbrain.git ~/gbrain && cd ~/gbrain
+> git clone https://github.com/singhvedant1701/tbrain.git ~/gbrain && cd ~/gbrain
 > bun install && bun link
 > ```
 
@@ -71,6 +77,33 @@ mkdir -p ~/brain && cd ~/brain && git init
 Read `~/gbrain/docs/GBRAIN_RECOMMENDED_SCHEMA.md` and set up the MECE directory
 structure (people/, companies/, concepts/, etc.) inside the user's brain repo,
 NOT inside ~/gbrain.
+
+## Step 3.1: Activate the tbrain-trader schema pack (DO NOT SKIP)
+
+This is what makes the install **tbrain** instead of plain gbrain. Without
+this step the brain runs the generic `gbrain-base` pack and the trader page
+types (instrument, position, trade, thesis, setup, sector, catalyst,
+watchlist, postmortem, account, macro) will not be recognized.
+
+```bash
+gbrain schema use tbrain-trader      # writes ~/.gbrain/config.json schema_pack field
+gbrain schema active                 # verify: should print tbrain-trader
+```
+
+This is the durable, file-plane activation — it sticks across commands and
+sessions without needing an env var. (`GBRAIN_SCHEMA_PACK=tbrain-trader` also
+works as a per-shell override if the user wants it scoped that way instead.)
+
+Then set up the trader directory layout (mirrors the filing rules in
+`skills/_brain-filing-rules.md`, trader section):
+
+```bash
+mkdir -p ~/brain/{instruments,sectors,accounts,theses,setups,macro,watchlists,journal,positions,catalysts,postmortems}
+```
+
+Read `TBRAIN.md` at the tool repo root for the full trader-loop overview
+(trade-journal → thesis-tracker → premarket-brief → trade-postmortem) before
+continuing to Step 4.
 
 ## Step 3.5: Confirm search mode with the user (DO NOT SKIP)
 
@@ -191,7 +224,7 @@ scaffold the bundled skills into it:
 
 ```bash
 cd /path/to/agent/workspace
-gbrain skillpack scaffold --all       # copy 43 curated skills + RESOLVER.md
+gbrain skillpack scaffold --all       # copy 58 curated skills + RESOLVER.md
 ```
 
 Scaffolded skills are first-class files in your repo. Edit freely; re-running scaffold
@@ -269,7 +302,7 @@ gbrain upgrade                        # self-updates the binary, runs schema mig
 If you installed via `git clone + bun link`:
 
 ```bash
-cd ~/gbrain && git pull origin master && bun install
+cd ~/gbrain && git pull origin main && bun install
 gbrain apply-migrations --yes         # apply schema migrations (idempotent)
 gbrain post-upgrade                   # show migration notes for the version range
 ```

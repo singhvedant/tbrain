@@ -91,7 +91,13 @@ export function _resetPackLocatorForTests(): void {
  * Returns null when the pack is not found. Callers handle null by
  * throwing UnknownPackError with a paste-ready install hint.
  */
-function defaultPackLocator(name: string): string | null {
+// Exported so other callers (e.g. `gbrain schema use` in commands/schema.ts)
+// can resolve bundled-pack paths without duplicating the BUNDLED registry.
+// Pre-existing bug this closes: packPathByName() in commands/schema.ts only
+// special-cased 'gbrain-base', so `gbrain schema use <any-other-bundled-pack>`
+// (gbrain-investor, gbrain-creator, tbrain-trader, ...) errored with "Unknown
+// pack" even though loadActivePack() could resolve and run them fine.
+export function defaultPackLocator(name: string): string | null {
   // v0.39 T8 — bundled packs registry. gbrain-base + gbrain-recommended
   // ship in src/core/schema-pack/base/. Add a new entry here to bundle
   // additional canonical packs.
