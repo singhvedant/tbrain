@@ -9,26 +9,49 @@ this file covers full engine install end to end.
 Read this entire file, then follow the steps. Ask the user for API keys when needed.
 Target: ~30 minutes to a fully working brain.
 
-## Step 0: If you are not Claude Code
+## Step 0: Identify YOUR harness FIRST (DO NOT SKIP)
 
-Read `AGENTS.md` at the repo root first. It's the non-Claude-agent operating
-protocol (install, read order, trust boundary, common tasks). Claude Code reads
-`CLAUDE.md` automatically and can skip ahead.
+tbrain runs inside a *body* — the agent harness. The harness decides WHERE
+config, skills, hooks, and schedules live. Using the wrong harness's paths is
+the #1 install failure. Determine which one you are before touching anything:
 
-If you fetched this file by URL without cloning yet, the companion files live at:
-- `https://raw.githubusercontent.com/singhvedant1701/tbrain/main/AGENTS.md` — start here
-- `https://raw.githubusercontent.com/singhvedant1701/tbrain/main/llms.txt` — full doc map
-- `https://raw.githubusercontent.com/singhvedant1701/tbrain/main/llms-full.txt` — same map, inlined
+| You are… | Tell-tale | Home dir | Prompt file | Hooks mechanism | Scheduler |
+|---|---|---|---|---|---|
+| **Hermes** | running under `hermes`/the Hermes gateway (WhatsApp/Telegram/etc), Python | `~/.hermes/` | `~/.hermes/SOUL.md` | `hooks:` in `~/.hermes/config.yaml` + gateway hooks in `~/.hermes/hooks/` | `hermes cron` |
+| **Claude Code** | you read `CLAUDE.md` automatically | `~/.claude/` | `~/.claude/CLAUDE.md` | `hooks` in `~/.claude/settings.json` | `gbrain autopilot` / crontab |
+| **Codex** | you read `AGENTS.md` | project dir | `AGENTS.md` | (no pre-prompt hook) | `gbrain autopilot` / crontab |
+| **other** | — | — | `AGENTS.md` | — | `gbrain autopilot` / crontab |
 
-## Step 1: Install GBrain
+Export your harness so the rest of this guide (and the installer) does the
+right thing:
 
-Default path (Bun is required — gbrain is a Bun + TypeScript runtime):
+```bash
+export TBRAIN_HARNESS=hermes        # or: claude-code | codex | generic
+```
+
+If you are NOT Claude Code, read `AGENTS.md` at the repo root now — it's the
+non-Claude operating protocol. If you fetched this file by URL without cloning:
+- `https://raw.githubusercontent.com/singhvedant1701/tbrain/main/AGENTS.md`
+- `https://raw.githubusercontent.com/singhvedant1701/tbrain/main/llms.txt`
+- `https://raw.githubusercontent.com/singhvedant1701/tbrain/main/llms-full.txt`
+
+## Step 1: Install tbrain
+
+Bun is required (the engine is a Bun + TypeScript runtime). **Clone the repo**
+— the global `bun install -g` gives you the `gbrain` binary but NOT the
+`integrations/` hooks + `skills/` tree that Step 5 needs, so clone is the
+canonical path for a full memory-loop setup:
 
 ```bash
 curl -fsSL https://bun.sh/install | bash
 export PATH="$HOME/.bun/bin:$PATH"
-bun install -g github:singhvedant1701/tbrain
+git clone https://github.com/singhvedant1701/tbrain.git ~/tbrain
+cd ~/tbrain && bun install && bun link
+export TBRAIN_REPO="$HOME/tbrain"     # used by later steps + the hook installer
 ```
+
+(Binary-only quick try: `bun install -g github:singhvedant1701/tbrain`. Fine for
+kicking the tires, but clone before wiring hooks/skills.)
 
 Verify: `gbrain --version` should print a version number. If `gbrain` is not found,
 restart the shell or add the PATH export to the shell profile.
@@ -217,26 +240,26 @@ rather than guessing a winner — review and prune the duplicates with
 (`gbrain extract links` with no `--source db`) and by auto-link on every future
 `put_page`.
 
-## Step 5: Load Skills
+## Step 5: Load Skills (harness-aware)
 
-If you're running an agent platform (OpenClaw, Hermes, or any repo with a workspace),
-scaffold the bundled skills into it:
+The 58 skills (incl. the 6 trader skills: trade-journal, thesis-tracker,
+trade-postmortem, premarket-brief, position-book, watchlist) are SKILL.md
+files. Where they go depends on YOUR harness (Step 0):
 
-```bash
-cd /path/to/agent/workspace
-gbrain skillpack scaffold --all       # copy 58 curated skills + RESOLVER.md
-```
+- **Hermes** — skills live in `~/.hermes/skills/<name>/SKILL.md`. Scaffold there:
+  ```bash
+  gbrain skillpack scaffold --all --dest ~/.hermes/skills
+  ```
+  (If `--dest` is unsupported in your build, copy the trader skills directly:
+  `cp -r "$TBRAIN_REPO"/skills/{trade-journal,thesis-tracker,trade-postmortem,premarket-brief,position-book,watchlist} ~/.hermes/skills/`)
+- **Claude Code / Codex** — scaffold into the workspace you run from:
+  ```bash
+  cd /path/to/agent/workspace && gbrain skillpack scaffold --all
+  ```
 
-Scaffolded skills are first-class files in your repo. Edit freely; re-running scaffold
-refuses to overwrite anything that exists. Use `gbrain skillpack reference <name>` to
-diff against gbrain's bundle when you want upstream improvements. (The legacy
-`gbrain skillpack install` managed-block model was retired in v0.36.0.0 — run
-`gbrain skillpack migrate-fence` once if upgrading from an older release.)
-
-Whether you scaffolded or not, read `skills/RESOLVER.md` (in your workspace, or the
-bundled copy at `~/gbrain/skills/RESOLVER.md` when running from the cloned repo). It's
-the skill dispatcher — tells you which skill to read for any task. Save this to your
-memory permanently.
+Scaffolded skills are first-class files. Re-running scaffold refuses to
+overwrite. Read `skills/RESOLVER.md` (in your workspace or `$TBRAIN_REPO/skills/RESOLVER.md`)
+— the dispatcher that maps any task to a skill. Save it to memory.
 
 The three most important skills to adopt immediately:
 
@@ -248,6 +271,50 @@ The three most important skills to adopt immediately:
 
 3. **Conventions** (`skills/conventions/quality.md`) — citation format, back-linking
    iron law, source attribution. These are non-negotiable quality rules.
+
+## Step 5.5: Wire the memory loop (THE point of tbrain — DO NOT SKIP)
+
+This is what makes tbrain *ambient*: every conversation pulls relevant trading
+memory in BEFORE the agent answers, and pushes new memory back out AFTER it
+responds — automatically, via your harness's hook system. One command wires
+all of it for your harness (run it from the cloned repo):
+
+```bash
+"$TBRAIN_REPO"/integrations/install-tbrain-hooks.sh \
+  --harness "$TBRAIN_HARNESS" --brain-repo ~/brain
+# preview without changing anything: add --dry-run
+```
+
+What it does, per harness:
+
+| | Pre-prompt retrieval (inject) | Post-response capture | Dream cycle |
+|---|---|---|---|
+| **Hermes** | shell hook `pre_llm_call` in `config.yaml` → `tbrain_inject.py` returns `{"context": …}` (first turn only) | gateway hook `agent:end` in `~/.hermes/hooks/tbrain-capture/` → `gbrain capture` | `hermes cron` runs `tbrain-dream.sh` nightly |
+| **Claude Code** | `UserPromptSubmit` hook in `settings.json` → `tbrain_inject.py` (stdout injected) | `Stop` hook → `tbrain_capture.py` | `gbrain autopilot --install` |
+| **Codex** | none (no pre-prompt hook) — the brain-first protocol makes the agent run `gbrain query` itself | in-band trade-journal/signal skills + dream cycle | `gbrain autopilot --install` |
+
+The installer also: activates the `tbrain-trader` pack, scaffolds the trader
+directory layout in `~/brain`, and appends the **brain-first protocol** to your
+harness's prompt file (`~/.hermes/SOUL.md`, `~/.claude/CLAUDE.md`, or `AGENTS.md`).
+It is idempotent — safe to re-run.
+
+**Hermes note:** the installer sets `hooks_auto_accept: true` so the non-TTY
+gateway can register the shell hook without an interactive consent prompt. The
+retrieval hook fires only on the first turn of each task (it reads
+`extra.is_first_turn`), so it does not re-inject on every tool-loop step.
+
+**Verify the loop:**
+```bash
+# inject: feed a synthetic payload, expect a tbrain-context block
+echo '{"extra":{"user_message":"my NVDA thesis","is_first_turn":true}}' \
+  | "$TBRAIN_REPO"/integrations/hooks/tbrain_inject.py --harness hermes
+# capture: a long turn lands in the brain inbox
+gbrain query "auto-capture" --json | head
+```
+
+After this, you do not need to remember to use the brain — the harness does it
+for you. The in-band skills (trade-journal etc.) remain the higher-quality path
+for deliberate writes; the hooks are the always-on backstop.
 
 ## Step 6: Identity (optional)
 
@@ -264,18 +331,33 @@ If skipped, minimal defaults are installed automatically.
 
 ## Step 7: Recurring Jobs
 
-Set up using your platform's scheduler (OpenClaw cron, Railway cron, crontab), or skip the
-platform glue entirely with `gbrain autopilot --install` (built-in self-maintaining daemon):
+The **dream cycle was already scheduled by Step 5.5's installer** (Hermes →
+`hermes cron`; Claude Code / Codex → `gbrain autopilot --install`). Confirm it:
+
+```bash
+# Hermes:
+hermes cron list | grep tbrain-dream
+# Claude Code / Codex:
+gbrain autopilot status
+```
+
+The remaining jobs (set via your harness's scheduler, or `gbrain autopilot`):
 
 - **Live sync** (every 15 min): `gbrain sync --repo ~/brain && gbrain embed --stale`
-  — or `gbrain sync --watch` for a continuous loop.
+  — or `gbrain sync --watch` for a continuous loop. (This is what indexes the
+  auto-captured inbox turns so they become searchable.)
 - **Auto-update** (daily): `gbrain check-update --json` (tell user, never auto-install).
-- **Dream cycle** (nightly): `gbrain dream` runs the 8-phase overnight maintenance cycle.
-  Entity sweep, citation fixes, memory consolidation, plus (v0.23+) overnight conversation
-  synthesis and cross-session pattern detection. One cron-friendly command. This is what
-  makes the brain compound. Do not skip it. See `docs/guides/cron-schedule.md` for the
-  full protocol.
+- **Dream cycle** (nightly): `gbrain dream` — entity sweep, citation fixes, memory
+  consolidation, contradiction detection, conversation synthesis. For tbrain this
+  is what files the auto-captured turns into `journal/`, `theses/`, etc. and
+  resolves take/calibration state. Do not skip it. The Hermes wrapper is
+  `~/.hermes/scripts/tbrain-dream.sh` (syncs + embeds + dreams in one shot).
 - **Weekly**: `gbrain doctor --json && gbrain embed --stale`
+
+**Hermes scheduling note:** `hermes cron create '<sched>' --script <name> --no-agent`
+runs a shell script under `~/.hermes/scripts/` on a schedule with NO LLM call
+(cheap, deterministic) — that's how `tbrain-dream.sh` is wired. Do not schedule
+the dream cycle as an LLM *prompt*; it's a CLI maintenance job.
 
 ## Step 8: Integrations
 

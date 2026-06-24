@@ -1,0 +1,8 @@
+name: tbrain-capture
+description: >
+  After every Hermes turn (gateway channels — WhatsApp, Telegram, Discord,
+  Slack, Signal), capture the user message + agent response into tbrain's
+  inbox so the dream cycle can extract trades, theses, and entities and file
+  them. Non-blocking; short/operational turns are skipped.
+events:
+  - agent:end
