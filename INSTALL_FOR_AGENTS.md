@@ -9,6 +9,40 @@ this file covers full engine install end to end.
 Read this entire file, then follow the steps. Ask the user for API keys when needed.
 Target: ~30 minutes to a fully working brain.
 
+## TL;DR — the install is NOT done until the memory loop is wired
+
+A tbrain install that stops after `gbrain init` is just a database. The thing
+that makes it *tbrain* is the **memory loop** (Step 5.5): every conversation
+pulls trading memory in before the agent answers and pushes new memory back
+after. **Do not skip it, do not summarize it away.** Minimum viable install:
+
+```bash
+# 0. identify harness (see table below) and set it
+export TBRAIN_HARNESS=hermes            # | claude-code | codex | generic
+
+# 1. clone (gives you integrations/ + skills/, which the binary-only install lacks)
+git clone https://github.com/singhvedant/tbrain.git ~/tbrain
+cd ~/tbrain && bun install && bun link
+export TBRAIN_REPO="$HOME/tbrain"
+
+# 2. brain + trader pack
+gbrain init
+gbrain schema use tbrain-trader
+
+# 3. trader skills INTO YOUR HARNESS (yes, even Hermes — ADD the 6 trader skills;
+#    Hermes having its own skills is NOT a reason to skip these). --workspace
+#    PATH scaffolds into PATH/skills/<name>/, so ~/.hermes -> ~/.hermes/skills/.
+[ "$TBRAIN_HARNESS" = hermes ] \
+  && gbrain skillpack scaffold --all --workspace ~/.hermes \
+  || gbrain skillpack scaffold --all --workspace .   # run from your agent workspace
+
+# 4. THE MEMORY LOOP — inject + capture + dream cycle, wired for your harness
+"$TBRAIN_REPO"/integrations/install-tbrain-hooks.sh --harness "$TBRAIN_HARNESS" --brain-repo ~/brain
+```
+
+The full guide below expands each line + API keys, search-mode cost choice, and
+verification. Read it. But if you only remember one thing: **run step 4.**
+
 ## Step 0: Identify YOUR harness FIRST (DO NOT SKIP)
 
 tbrain runs inside a *body* — the agent harness. The harness decides WHERE
@@ -246,15 +280,20 @@ The 58 skills (incl. the 6 trader skills: trade-journal, thesis-tracker,
 trade-postmortem, premarket-brief, position-book, watchlist) are SKILL.md
 files. Where they go depends on YOUR harness (Step 0):
 
-- **Hermes** — skills live in `~/.hermes/skills/<name>/SKILL.md`. Scaffold there:
+`--workspace PATH` scaffolds into `PATH/skills/<name>/SKILL.md` (it appends
+`skills/` itself — don't include it):
+
+- **Hermes** — skills live in `~/.hermes/skills/`. Point `--workspace` at the
+  Hermes home:
   ```bash
-  gbrain skillpack scaffold --all --dest ~/.hermes/skills
+  gbrain skillpack scaffold --all --workspace ~/.hermes
   ```
-  (If `--dest` is unsupported in your build, copy the trader skills directly:
+  Even though Hermes ships its own skills, you MUST add the 6 trader skills —
+  they are not in the Hermes bundle. (Manual fallback:
   `cp -r "$TBRAIN_REPO"/skills/{trade-journal,thesis-tracker,trade-postmortem,premarket-brief,position-book,watchlist} ~/.hermes/skills/`)
 - **Claude Code / Codex** — scaffold into the workspace you run from:
   ```bash
-  cd /path/to/agent/workspace && gbrain skillpack scaffold --all
+  cd /path/to/agent/workspace && gbrain skillpack scaffold --all --workspace .
   ```
 
 Scaffolded skills are first-class files. Re-running scaffold refuses to
