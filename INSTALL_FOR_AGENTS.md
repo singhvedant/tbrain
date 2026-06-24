@@ -63,7 +63,7 @@ restart the shell or add the PATH export to the shell profile.
 > to recover. If that doesn't work, fall back to the deterministic install path:
 >
 > ```bash
-> git clone https://github.com/singhvedant/tbrain.git ~/gbrain && cd ~/gbrain
+> git clone https://github.com/singhvedant/tbrain.git ~/tbrain && cd ~/tbrain
 > bun install && bun link
 > ```
 
@@ -97,9 +97,9 @@ Ask the user where their files are, or create a new brain repo:
 mkdir -p ~/brain && cd ~/brain && git init
 ```
 
-Read `~/gbrain/docs/GBRAIN_RECOMMENDED_SCHEMA.md` and set up the MECE directory
+Read `~/tbrain/docs/GBRAIN_RECOMMENDED_SCHEMA.md` and set up the MECE directory
 structure (people/, companies/, concepts/, etc.) inside the user's brain repo,
-NOT inside ~/gbrain.
+NOT inside ~/tbrain.
 
 ## Step 3.1: Activate the tbrain-trader schema pack (DO NOT SKIP)
 
@@ -361,7 +361,7 @@ the dream cycle as an LLM *prompt*; it's a CLI maintenance job.
 
 ## Step 8: Integrations
 
-Run `gbrain integrations list`. Each recipe in `~/gbrain/recipes/` is a self-contained
+Run `gbrain integrations list`. Each recipe in `~/tbrain/recipes/` is a self-contained
 installer. It tells you what credentials to ask for, how to validate, and what cron
 to register. Ask the user which integrations they want (email, calendar, voice, Twitter).
 
@@ -384,12 +384,12 @@ gbrain upgrade                        # self-updates the binary, runs schema mig
 If you installed via `git clone + bun link`:
 
 ```bash
-cd ~/gbrain && git pull origin main && bun install
+cd ~/tbrain && git pull origin main && bun install
 gbrain apply-migrations --yes         # apply schema migrations (idempotent)
 gbrain post-upgrade                   # show migration notes for the version range
 ```
 
-Then read `~/gbrain/skills/migrations/v<NEW_VERSION>.md` (and any intermediate
+Then read `~/tbrain/skills/migrations/v<NEW_VERSION>.md` (and any intermediate
 versions you skipped) and run any backfill or verification steps it lists. Skipping
 this is how features ship in the binary but stay dormant in the user's brain.
 
