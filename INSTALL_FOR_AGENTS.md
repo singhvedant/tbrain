@@ -31,9 +31,9 @@ export TBRAIN_HARNESS=hermes        # or: claude-code | codex | generic
 
 If you are NOT Claude Code, read `AGENTS.md` at the repo root now — it's the
 non-Claude operating protocol. If you fetched this file by URL without cloning:
-- `https://raw.githubusercontent.com/singhvedant1701/tbrain/main/AGENTS.md`
-- `https://raw.githubusercontent.com/singhvedant1701/tbrain/main/llms.txt`
-- `https://raw.githubusercontent.com/singhvedant1701/tbrain/main/llms-full.txt`
+- `https://raw.githubusercontent.com/singhvedant/tbrain/main/AGENTS.md`
+- `https://raw.githubusercontent.com/singhvedant/tbrain/main/llms.txt`
+- `https://raw.githubusercontent.com/singhvedant/tbrain/main/llms-full.txt`
 
 ## Step 1: Install tbrain
 
@@ -45,12 +45,12 @@ canonical path for a full memory-loop setup:
 ```bash
 curl -fsSL https://bun.sh/install | bash
 export PATH="$HOME/.bun/bin:$PATH"
-git clone https://github.com/singhvedant1701/tbrain.git ~/tbrain
+git clone https://github.com/singhvedant/tbrain.git ~/tbrain
 cd ~/tbrain && bun install && bun link
 export TBRAIN_REPO="$HOME/tbrain"     # used by later steps + the hook installer
 ```
 
-(Binary-only quick try: `bun install -g github:singhvedant1701/tbrain`. Fine for
+(Binary-only quick try: `bun install -g github:singhvedant/tbrain`. Fine for
 kicking the tires, but clone before wiring hooks/skills.)
 
 Verify: `gbrain --version` should print a version number. If `gbrain` is not found,
@@ -59,11 +59,11 @@ restart the shell or add the PATH export to the shell profile.
 > **If `bun install -g` aborts or `gbrain doctor` reports `schema_version: 0`** (Bun
 > occasionally blocks the top-level postinstall hook on global installs, so schema
 > migrations don't run automatically), the CLI prints a recovery hint pointing at
-> [#218](https://github.com/singhvedant1701/tbrain/issues/218). Run `gbrain apply-migrations --yes`
+> [#218](https://github.com/singhvedant/tbrain/issues/218). Run `gbrain apply-migrations --yes`
 > to recover. If that doesn't work, fall back to the deterministic install path:
 >
 > ```bash
-> git clone https://github.com/singhvedant1701/tbrain.git ~/gbrain && cd ~/gbrain
+> git clone https://github.com/singhvedant/tbrain.git ~/gbrain && cd ~/gbrain
 > bun install && bun link
 > ```
 

@@ -88,7 +88,7 @@ Then paste this into your agent:
 
 ```
 Retrieve and follow the instructions at:
-https://raw.githubusercontent.com/singhvedant1701/tbrain/main/INSTALL_FOR_AGENTS.md
+https://raw.githubusercontent.com/singhvedant/tbrain/main/INSTALL_FOR_AGENTS.md
 ```
 
 The agent installs GBrain, creates the brain, asks for your API keys, loads 58 skills (43 base + 6 trader), configures the dream cycle, and verifies the install end-to-end. ~30 minutes. You answer questions, it does the work.
@@ -121,7 +121,7 @@ Want the whole thing — local brain, 58 skills, the overnight dream cycle that 
 
 ```
 Retrieve and follow the instructions at:
-https://raw.githubusercontent.com/singhvedant1701/tbrain/main/INSTALL_FOR_AGENTS.md
+https://raw.githubusercontent.com/singhvedant/tbrain/main/INSTALL_FOR_AGENTS.md
 ```
 
 This works in any agent that can read files over HTTPS and execute shell commands. Tested with Codex, Claude Code, Claude Cowork, Cursor, and AlphaClaw.
@@ -129,7 +129,7 @@ This works in any agent that can read files over HTTPS and execute shell command
 ### CLI standalone (no agent)
 
 ```bash
-bun install -g github:singhvedant1701/tbrain
+bun install -g github:singhvedant/tbrain
 gbrain init --pglite     # 2 seconds; no server, no Docker
 gbrain doctor            # verify health
 gbrain import ~/notes/   # index your markdown
@@ -243,7 +243,7 @@ Step-by-step walkthroughs for getting the most out of GBrain. Each one takes you
 
 More walkthroughs in progress: connecting an existing agent (Claude Code, Cursor, OpenClaw, Hermes) to a GBrain memory layer; setting up GBrain for VC dealflow with founder scorecards and meeting prep; migrating an existing Notion or Obsidian vault; indexing a codebase as a queryable code brain. Full tutorial index: [`docs/tutorials/`](docs/tutorials/).
 
-Want to see a tutorial that isn't here yet? [Open an issue](https://github.com/singhvedant1701/tbrain/issues) describing the workflow you want documented.
+Want to see a tutorial that isn't here yet? [Open an issue](https://github.com/singhvedant/tbrain/issues) describing the workflow you want documented.
 
 ## What it does (the loop)
 
